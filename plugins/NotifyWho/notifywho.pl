@@ -15,24 +15,22 @@ use MT::Mail;
 use NotifyWho::Notification;
 
 # Public version number
-our $VERSION = "2.0";
+our $VERSION = "2.0.1";
 
 # Development revision number
-our $Revision = ('$Revision: 504 $ ' =~ /(\d+)/);
-my $beta_notice = " (Beta 1, revision $Revision)";
+#our $Revision = ('$Revision: 504 $ ' =~ /(\d+)/);
+#my $beta_notice = " (Beta 1, revision $Revision)";
 
 our ($plugin, $PLUGIN_MODULE, $PLUGIN_KEY);
 MT->add_plugin($plugin = __PACKAGE__->new({
-    name            => 'Notify Who?!'.$beta_notice,
+    name            => 'Notify Who?!',
     version         => $VERSION,
     schema_version  => 2,
     key             => plugin_key(),
     author_name     => 'Jay Allen',
     author_link     => (our $JA = 'http://jayallen.org'),
-    plugin_link     => $JA. '/projects/notifywho/',
-    description     => '<MT_TRANS phrase="NOTIFYWHO_PLUGIN_DESCRIPTION">'
-                        . "<!-- (Revision: $Revision) -->",
-    # doc_link        => $JA. '/projects/notifywho/docs/v'.$VERSION,
+    plugin_link     => 'https://github.com/endevver/mt-plugin-notifywho',
+    description     => '<MT_TRANS phrase="NOTIFYWHO_PLUGIN_DESCRIPTION">',
     l10n_class      => 'NotifyWho::L10N',
     blog_config_template => 'blog_config.tmpl',
     settings => new MT::PluginSettings([
@@ -73,6 +71,11 @@ sub init_registry {
             # If enabled, this callback handles the sending of notifications
             # after an entry is newly published.
             'cms_post_save.entry'
+                            => sub { runner('autosend_entry_notify', @_) },
+            
+            # This callback handles sending notifications for an entry created
+            # through the API, such as the Community Pack does.
+            'api_post_save.entry'
                             => sub { runner('autosend_entry_notify', @_) },
 
             # This callback handles notification modifications for feedback

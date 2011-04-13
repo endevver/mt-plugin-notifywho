@@ -10,11 +10,11 @@ use Data::Dumper;
 use MT::Util qw( is_valid_email );
 use MT::Entry;
 
-# use vars qw($logger);
-# sub get_logger {    
-#     use MT::Log::Log4perl qw(l4mtdump);
-#     $logger = MT::Log::Log4perl->new();
-# }
+ use vars qw($logger);
+sub get_logger {    
+    use MT::Log::Log4perl qw(l4mtdump);
+    $logger = MT::Log::Log4perl->new();
+}
 
 # record_recipients
 #
@@ -26,12 +26,13 @@ sub record_recipients {
     my ($cb, $app) = @_;
     return unless $app->mode eq 'send_notify';
 
-    # $logger ||= get_logger();
-    # $logger->trace();
+    $logger ||= get_logger();
+    $logger->trace();
+    $logger->info('About to record NotifyWho recipients!');
 
     if (defined $app->errstr and $app->errstr ne '') {
-        # $logger->error('Not recording NotifyWho recipients due to an '
-        #                 .'error in sending mail: ', $app->errstr);
+        $logger->error('Not recording NotifyWho recipients due to an '
+                     .'error in sending mail: ', $app->errstr);
         return;
     }
 
@@ -46,9 +47,9 @@ sub record_recipients {
         $recipients{$_} = 1 foreach @addr;
     }
 
-    # $logger->debug('$app->{query}: ', l4mtdump(\$app->{query}));
-    # $logger->info('Recording NotifyWho recipients!');
-    # $logger->debug(l4mtdump(\%recipients));
+    $logger->debug('$app->{query}: ', l4mtdump(\$app->{query}));
+    $logger->info('Recording NotifyWho recipients!');
+    $logger->debug(l4mtdump(\%recipients));
 
     require NotifyWho::Notification;
     NotifyWho::Notification->save_multiple(
@@ -68,8 +69,8 @@ sub record_recipients {
 # recipients as well as a clickable list of possible recipients.
 sub entry_notify_param {
     my $plugin = shift;
-    # $logger ||= get_logger();
-    # $logger->trace();
+    $logger ||= get_logger();
+    $logger->trace();
     $plugin->runner('_notification_screen_defaults', \@_);
 
     my $previous = $plugin->runner('_previous_recipients', \@_);
@@ -85,8 +86,8 @@ sub entry_notify_param {
 sub edit_entry_param {
     my $plugin = shift;
     my ($cb, $app, $tmpl_ref) = @_;
-    # $logger ||= get_logger();
-    # $logger->trace();
+    $logger ||= get_logger();
+    $logger->trace();
     $plugin->runner('_automatic_notifications', \@_);
 
 }
@@ -98,20 +99,24 @@ sub edit_entry_param {
 sub autosend_entry_notify {
     my ($plugin, $cb, $app, $entry, $orig_obj) = @_;
 
-    # $logger ||= get_logger();
-    # $logger->trace();
-    # $logger->debug(Dumper($entry));
-    # $logger->debug(Dumper($orig_obj));
-    # {        
-        # $app->{query}->param('auto_notifications', 1); 
-    # }
-
-    
-    if (! $app->{query}->param('auto_notifications')) {
-        # $logger->debug('Auto-notifications are DISABLED for the current entry.'); 
-        return;       
+    $logger ||= get_logger();
+    $logger->trace();
+    $logger->debug(Dumper($entry));
+    $logger->debug(Dumper($orig_obj));
+    {        
+        $app->{query}->param('auto_notifications', 1); 
     }
-    # $logger->debug('Auto-notifications are ENABLED. Commencing now...');
+
+    # The "auto_notifications" parameter is set only if this new entry is 
+    # created within the MT admin interface. If this is an entry created from 
+    # the Community Pack, then the parameter doesn't exist.
+    if ( !$app->isa('MT::App::Community') 
+        && !$app->{query}->param('auto_notifications')
+    ) {
+        $logger->debug('Auto-notifications are DISABLED for the current entry.'); 
+        return;
+    }
+    $logger->debug('Auto-notifications are ENABLED. Commencing now...');
 
     # Check to see if this function is enabled in plugin settings
     my $blog = $entry->blog;
@@ -124,7 +129,7 @@ sub autosend_entry_notify {
             class    => 'system',
             category => 'notifywho'
         });
-        # $logger->error($msg);
+        $logger->error($msg);
         return;
     }
     my $blogarg = 'blog:'.$app->blog->id;
@@ -141,21 +146,21 @@ sub autosend_entry_notify {
     my $send_body       = ( $entry_text_cfg eq 'full' )     ? 1 : 0;
 
     my $has_recipients = $notify_list || $notify_emails;
-    # $logger->debug(sprintf
-    #     '$has_recipients, $notify_list, $notify_emails: %s, %s, %s,',
-    #      $has_recipients, $notify_list, $notify_emails);
+    $logger->debug(sprintf
+     '$has_recipients, $notify_list, $notify_emails: %s, %s, %s,',
+      $has_recipients, $notify_list, $notify_emails);
 
     if (! $has_recipients) {
-        # $logger->debug('NOT ENABLED - No recipients specified');
+        $logger->debug('NOT ENABLED - No recipients specified');
         return;        
     }
     elsif ( ! _is_newly_published($entry, $orig_obj)
         or  _has_previous_notifications($entry->id)) {
-        # $logger->debug('NOT A NEW ENTRY - Aborting send notify');
+        $logger->debug('NOT A NEW ENTRY - Aborting send notify');
         return;
     }
 
-    # $logger->debug('Preparing to send notifications');
+    $logger->debug('Preparing to send notifications');
 
     # Set params for MT::App::CMS::send_notify()
     $app->mode('send_notify');
@@ -167,9 +172,12 @@ sub autosend_entry_notify {
     $app->param('send_body', $send_body);
 
     # Execute MT::App::CMS::send_notify()
-    my $rc = $app->send_notify();
+    # $app may be an MT::App or it could be MT::App::Community, if the entry
+    # is created from a public form.
+    my $rc = MT::App::CMS::send_notify($app);
+    $logger->debug('Notifications sent.');
     delete $app->{$_} foreach (qw(redirect redirect_use_meta));
-    # $logger->error($app->errstr) if $app->errstr;
+    $logger->error($app->errstr) if $app->errstr;
     $rc;
 }
 
@@ -199,19 +207,19 @@ TMPL
 sub cb_mail_filter {
     my $plugin = shift;
     my ($cb, %params) = @_;
-    # $logger ||= get_logger();
-    # $logger->trace();
+    $logger ||= get_logger();
+    $logger->trace();
 
-    # $logger->info('HANDLING ', $params{id});
+    $logger->info('HANDLING ', $params{id});
 
     if ($params{id} =~ m!new_(comment|ping)!) {
         
         # Get the config for this blog
         my $blog = $plugin->current_blog();
-        # $logger->debug('$blog: ', l4mtdump($blog));
+        $logger->debug('$blog: ', l4mtdump($blog));
 
         my $config = $plugin->get_config_hash('blog:' . $blog->id);
-        # $logger->debug('$config: ', l4mtdump($config));
+        $logger->debug('$config: ', l4mtdump($config));
 
         my @recipients
             = $config->{nw_fback_author} ? $params{headers}->{To} : ();
@@ -226,9 +234,9 @@ sub cb_mail_filter {
                 $plugin->runner('_blog_subscribers'));
         }
 
-        # $logger->debug('Intended recips: ', (join ', ',@recipients));
-        # $logger->debug('DELETING FROM TO: ', delete $params{headers}->{To});
-        # $logger->debug('DELETING FROM BCC: ', delete $params{headers}->{Bcc});
+        $logger->debug('Intended recips: ', (join ', ',@recipients));
+        $logger->debug('DELETING FROM TO: ', delete $params{headers}->{To});
+        $logger->debug('DELETING FROM BCC: ', delete $params{headers}->{Bcc});
 
         if (@recipients) {        
             if (MT->instance->config('EmailNotificationBcc')) {
@@ -239,9 +247,9 @@ sub cb_mail_filter {
                 push @{ $params{headers}->{To} }, @recipients;
             }
         }
-        # $logger->debug('NEW TO: ', l4mtdump($params{headers}->{To}));
-        # $logger->debug('NEW BCC: ', l4mtdump($params{headers}->{Bcc}));
-        # $logger->debug('MAIL PARAMS: ', l4mtdump(\%params));    
+        $logger->debug('NEW TO: ', l4mtdump($params{headers}->{To}));
+        $logger->debug('NEW BCC: ', l4mtdump($params{headers}->{Bcc}));
+        $logger->debug('MAIL PARAMS: ', l4mtdump(\%params));    
     }
     
     return 1;
@@ -251,7 +259,7 @@ sub _automatic_notifications {
     my $plugin = shift;
     my ($cb, $app, $param, $tmpl) = @{$_[0]};
     
-    # $logger->trace();
+    $logger->trace();
 
     return unless $param->{new_object};
     
@@ -269,7 +277,7 @@ EOM
 sub _previous_recipients {
     my $plugin = shift;
     my ($cb, $app, $param, $tmpl) = @{$_[0]};
-    # $logger->trace();
+    $logger->trace();
     
     my $q = $app->param;
     my $entry_id = $q->param('entry_id') or return;
@@ -350,9 +358,9 @@ sub _possible_recipients {
             $possible{$recip->email} = 1;
         }
     }
-    # else {
-    #     $logger->info('No notifications found for blog ', $entry->blog_id);        
-    # }
+    else {
+        $logger->info('No notifications found for blog ', $entry->blog_id);        
+    }
 
     if (keys %possible) {
         my @possible = map { '<a href="javascript:void(0)" onclick="add_recipient(\''.$_.'\');return false;">[+] '.$_.'</a>' } keys %possible;
@@ -435,9 +443,10 @@ sub _is_newly_published {
     my ($entry, $orig_obj) = @_;
     
     return (
-            ($entry->status == MT::Entry::RELEASE)    # Is now published
-        and (! $orig_obj                                 # Is a new entry
-            or $orig_obj->status != MT::Entry::RELEASE) # Was not published    
+            # This entry is now published or unpublished.
+            ($entry->status == MT::Entry::RELEASE || $entry->status == MT::Entry::HOLD)
+        and (! $orig_obj                                # and is a new entry
+            or $orig_obj->status != MT::Entry::RELEASE) # or was not published
         );
 }
 
@@ -450,9 +459,9 @@ sub _has_previous_notifications {
 sub _sent_notifications {
     my $plugin = shift;
     my $entry_id = shift;
-    # $logger->trace();
+    $logger->trace();
 
-    # $logger->debug("Pulling sent notifications for entry ID $entry_id");
+    $logger->debug("Pulling sent notifications for entry ID $entry_id");
     return unless NotifyWho::Notification->count({entry_id => $entry_id});
 
     # Load from table
