@@ -26,7 +26,7 @@
 
         <p>
             <label for="nw_entry_emails"><__trans phrase="Other email addresses">:</label>
-        <textarea name="nw_entry_emails" id="nw_entry_emails" cols="60" rows="2"><mt:var name="nw_entry_emails" escape="html"></textarea>
+            <textarea class="full-width" name="nw_entry_emails" id="nw_entry_emails" cols="50" rows="2"><mt:var name="nw_entry_emails" escape="html"></textarea>
         </p>
     </mtapp:setting>
 
@@ -36,7 +36,7 @@
         show_hint="1"
         hint="<__trans phrase="This message will be displayed along the link to the entry and any of the entry content you choose below.">">
 
-        <textarea style="width: 425px" name="nw_entry_message" id="nw_entry_message" cols="50" rows="3"><mt:var name="nw_entry_message" escape="html" /></textarea>
+        <textarea class="full-width" name="nw_entry_message" id="nw_entry_message" cols="50" rows="3"><mt:var name="nw_entry_message" escape="html" /></textarea>
     </mtapp:setting>
 
     <mtapp:setting
@@ -60,7 +60,14 @@
         hint="<__trans phrase="If checked, automatic delivery can be overridden on a per-entry basis.">"
         show_hint="1">
 
-        <input type="checkbox" name="nw_entry_auto" id="nw_entry_auto" value="1" <mt:if name="nw_entry_auto_1">checked="checked"</mt:if> /> <label for="nw_entry_auto"><__trans phrase="Send a notification automatically when a new entry is created."></label>
+        <div>
+            <input type="checkbox" name="nw_entry_created_auto" id="nw_entry_created_auto" value="1" <mt:if name="nw_entry_created_auto_1">checked="checked"</mt:if> />
+            <label for="nw_entry_created_auto"><__trans phrase="Send a notification automatically when a new entry is created."></label>
+        </div>
+        <div>
+            <input type="checkbox" name="nw_entry_auto" id="nw_entry_auto" value="1" <mt:if name="nw_entry_auto_1">checked="checked"</mt:if> />
+            <label for="nw_entry_auto"><__trans phrase="Send a notification automatically when a new entry is published."></label>
+        </div>
     </mtapp:setting>
 
 </mtapp:settinggroup>
@@ -90,7 +97,7 @@
 
         <p>
             <label for="nw_fback_emails"><__trans phrase="Other email addresses">:</label>
-        <textarea name="nw_fback_emails" id="nw_fback_emails" cols="60" rows="2"><mt:var name="nw_fback_emails" escape="html"></textarea>
+            <textarea class="full-width" name="nw_fback_emails" id="nw_fback_emails" cols="60" rows="2"><mt:var name="nw_fback_emails" escape="html"></textarea>
         </p>
     </mtapp:setting>
 

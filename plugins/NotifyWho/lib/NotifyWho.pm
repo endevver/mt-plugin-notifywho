@@ -36,8 +36,23 @@ sub record_recipients {
         return;
     }
 
+    my $entry_id = $app->param('entry_id');
+    
+    # If this entry is being published, then the entry status is published, 
+    # and this is the last notification that NotifyWho will send. If the 
+    # entry is unpublished and the $app->mode is "send_notify", then we're 
+    # sending notification of a draft entry. Don't record recipients because 
+    # NotifyWho may send notifications again, when the entry is published.
+    my $entry = MT->model('entry')->load($entry_id);
+    if ($entry->status == MT::Entry::HOLD) {
+        $logger->info('Not recording NotifyWho recipients because the entry '
+            . 'creation email was just sent. (Recipients are saved when the '
+            . '"published" email is sent.)');
+        return;
+    }
+
     my %recipients;
-    if ($app->param('send_notify_list')) {            
+    if ($app->param('send_notify_list')) {
         %recipients = map { $_->email => 1 }
             $plugin->runner('_blog_subscribers');
     }
@@ -53,9 +68,9 @@ sub record_recipients {
 
     require NotifyWho::Notification;
     NotifyWho::Notification->save_multiple(
-        {            
+        {
             blog_id     => $app->blog->id,
-            entry_id    => $app->param('entry_id'),
+            entry_id    => $entry_id,
             recipients  => [keys %recipients]
         }
     );
@@ -103,10 +118,9 @@ sub autosend_entry_notify {
     $logger->trace();
     $logger->debug(Dumper($entry));
     $logger->debug(Dumper($orig_obj));
-    {        
-        $app->{query}->param('auto_notifications', 1); 
-    }
 
+    # On the Edit Entry screen, Notify Who adds a switch to enable/disable
+    # notifications for that entry, called "auto_notifications".
     # The "auto_notifications" parameter is set only if this new entry is 
     # created within the MT admin interface. If this is an entry created from 
     # the Community Pack, then the parameter doesn't exist.
@@ -144,6 +158,9 @@ sub autosend_entry_notify {
 
     my $send_excerpt    = ( $entry_text_cfg eq 'excerpt' )  ? 1 : 0;
     my $send_body       = ( $entry_text_cfg eq 'full' )     ? 1 : 0;
+    
+    my $notify_upon_create 
+        = $plugin->get_config_value('nw_entry_created_auto', $blogarg) || 0;
 
     my $has_recipients = $notify_list || $notify_emails;
     $logger->debug(sprintf
@@ -152,10 +169,12 @@ sub autosend_entry_notify {
 
     if (! $has_recipients) {
         $logger->debug('NOT ENABLED - No recipients specified');
-        return;        
+        return;
     }
-    elsif ( ! _is_newly_published($entry, $orig_obj)
-        or  _has_previous_notifications($entry->id)) {
+    elsif (
+        ! _is_new_entry($notify_upon_create, $entry, $orig_obj)
+        ||  _has_previous_notifications($entry->id)
+    ) {
         $logger->debug('NOT A NEW ENTRY - Aborting send notify');
         return;
     }
@@ -238,7 +257,7 @@ sub cb_mail_filter {
         $logger->debug('DELETING FROM TO: ', delete $params{headers}->{To});
         $logger->debug('DELETING FROM BCC: ', delete $params{headers}->{Bcc});
 
-        if (@recipients) {        
+        if (@recipients) {
             if (MT->instance->config('EmailNotificationBcc')) {
                 push @{ $params{headers}->{Bcc} }, @recipients;
                 push @{ $params{headers}->{To} }, $params{headers}->{From}
@@ -249,7 +268,7 @@ sub cb_mail_filter {
         }
         $logger->debug('NEW TO: ', l4mtdump($params{headers}->{To}));
         $logger->debug('NEW BCC: ', l4mtdump($params{headers}->{Bcc}));
-        $logger->debug('MAIL PARAMS: ', l4mtdump(\%params));    
+        $logger->debug('MAIL PARAMS: ', l4mtdump(\%params));
     }
     
     return 1;
@@ -264,7 +283,14 @@ sub _automatic_notifications {
     return unless $param->{new_object};
     
     my $blogarg = 'blog:'.$app->blog->id;
+    
+    # Notify upon entry creation?
     my $auto
+       = $plugin->get_config_value('nw_entry_created_auto', $blogarg) || 0;
+    return unless $auto;
+
+    # Or notify upon entry publication?
+    $auto
        = $plugin->get_config_value('nw_entry_auto', $blogarg) || 0;
     return unless $auto;
 
@@ -423,7 +449,7 @@ sub _notification_screen_defaults {
                                                         : undef;
         if ($marker) {
             $html =~ s{(id="$marker")}{$1 checked="checked"};
-            $input->innerHTML($html);            
+            $input->innerHTML($html);
         }
     }
 }
@@ -437,17 +463,19 @@ sub _blog_subscribers {
     }
     require MT::Notification;
     return (MT::Notification->load({blog_id => $blog_id}));
-}        
+}
 
-sub _is_newly_published {
-    my ($entry, $orig_obj) = @_;
-    
+sub _is_new_entry {
+    my ($notify_upon_create, $entry, $orig_obj) = @_;
+
     return (
-            # This entry is now published or unpublished.
-            ($entry->status == MT::Entry::RELEASE || $entry->status == MT::Entry::HOLD)
-        and (! $orig_obj                                # and is a new entry
-            or $orig_obj->status != MT::Entry::RELEASE) # or was not published
-        );
+            ($notify_upon_create && !$orig_obj)         # Notify of new entry
+        ||
+            ($entry->status == MT::Entry::RELEASE)      # Is now published
+        && (! $orig_obj                                 # Is a new entry
+            || $orig_obj->status != MT::Entry::RELEASE) # Was not published
+        || 0
+    );
 }
 
 sub _has_previous_notifications {
