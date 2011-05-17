@@ -116,6 +116,9 @@ sub edit_entry_param {
 sub autosend_entry_notify {
     my ($plugin, $cb, $app, $entry, $orig_obj) = @_;
 
+    my $send_status = $app->request('notifywho_already_sent') || {};
+    return if $send_status->{ sent } == 1;
+
     $logger ||= get_logger();
     $logger->trace();
     $logger->debug(Dumper($entry));
@@ -199,6 +202,7 @@ sub autosend_entry_notify {
     $logger->debug('Notifications sent.');
     delete $app->{$_} foreach (qw(redirect redirect_use_meta));
     $logger->error($app->errstr) if $app->errstr;
+    $send_status->{ sent } == 1;
     $rc;
 }
 
