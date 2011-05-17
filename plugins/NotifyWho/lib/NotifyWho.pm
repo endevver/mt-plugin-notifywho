@@ -30,7 +30,9 @@ sub record_recipients {
     $logger->trace();
     $logger->info('About to record NotifyWho recipients!');
 
-    if (defined $app->errstr and $app->errstr ne '') {
+    if (    defined $app->errstr
+        and $app->errstr ne ''
+        and $app->errstr !~ m{This\s+shouldn.t\s+happen.*Text/Wrap.pm} ) {
         $logger->error('Not recording NotifyWho recipients due to an '
                      .'error in sending mail: ', $app->errstr);
         return;
