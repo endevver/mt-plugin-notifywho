@@ -197,7 +197,7 @@ sub autosend_entry_notify {
     ###l4p $logger->debug('Notifications sent.');
     delete $app->{$_} foreach (qw(redirect redirect_use_meta));
     ###l4p $logger->error($app->errstr) if $app->errstr;
-    $send_status->{ sent } == 1;
+    $send_status->{ sent } = 1;
     $rc;
 }
 
