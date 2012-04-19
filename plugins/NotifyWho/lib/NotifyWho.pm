@@ -170,10 +170,11 @@ sub autosend_entry_notify {
         ###l4p $logger->debug('NOT ENABLED - No recipients specified');
         return;
     }
-    elsif (
-        ! _is_new_entry($notify_upon_create, $entry, $orig_obj)
-        ||  _has_previous_notifications($entry->id)
-    ) {
+    elsif ( _has_previous_notifications($entry->id) ) {
+        ###l4p $logger->debug('NOTIFICATIONS PREVIOUSLY SENT - Aborting send notify');
+        return;
+    }
+    elsif ( ! _is_new_entry($notify_upon_create, $entry, $orig_obj) ) {
         ###l4p $logger->debug('NOT A NEW ENTRY - Aborting send notify');
         return;
     }
