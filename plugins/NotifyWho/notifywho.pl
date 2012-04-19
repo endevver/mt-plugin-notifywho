@@ -51,9 +51,8 @@ MT->add_plugin($plugin = __PACKAGE__->new({
     ]),
 }));
 
-# use MT::Log::Log4perl qw(l4mtdump);
-# use vars qw($logger);
-# $logger = MT::Log::Log4perl->new();
+# use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
+###l4p our $logger = MT::Log::Log4perl->new();
 
 sub init_registry {
     my $plugin = shift;
@@ -116,7 +115,7 @@ sub init_registry {
 # sub init_request {
 #     my $plugin = shift;
 #     my ($app) = @_;
-#     $logger->trace();
+#     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 #
 #     # TODO Disable ThrottleSeconds disabling
 #     $app->config('ThrottleSeconds', 0);
@@ -128,17 +127,17 @@ sub init_registry {
 sub load_config {
     my $plugin = shift;
     my ($param, $scope) = @_;
-    # $logger->trace();
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     $plugin->SUPER::load_config(@_);
     $plugin->convert_config($param);
-    # $logger->debug("\$param for scope $scope: ", l4mtdump($param));
+    ##l4p $logger->debug("\$param for scope $scope: ", l4mtdump($param));
     $param;
 }
 
 sub save_config {
     my $plugin = shift;
     my ($param, $scope) = @_;
-    # $logger->trace();
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     require MT::Util;
 
@@ -156,7 +155,7 @@ sub save_config {
         @emails
             = grep(! $seen{$_}++ && MT::Util::is_valid_email($_), @emails);
         $param->{$key} = join(', ',@emails);
-        # $logger->debug("FINAL $key VALUE: ", $param->{$key});
+        ##l4p $logger->debug("FINAL $key VALUE: ", $param->{$key});
 
     }
 
@@ -189,7 +188,7 @@ sub convert_config {
 }
 
 sub runner {
-    # $logger->debug(sprintf 'IN RUNNER ARG: %s %s', ref $_, $_) foreach @_;
+    ##l4p $logger->debug(sprintf 'IN RUNNER ARG: %s %s', ref $_, $_) foreach @_;
 
     shift if ref($_[0]) eq ref($plugin);
     my $method = shift;
@@ -197,14 +196,14 @@ sub runner {
     eval "require $PLUGIN_MODULE";
     if ($@) { print STDERR $@; $@ = undef; return 1; }
 
-    # $logger->debug(sprintf 'Looking for %s in module %s', $method, $PLUGIN_MODULE);
+    ##l4p $logger->debug(sprintf 'Looking for %s in module %s', $method, $PLUGIN_MODULE);
 
     my $method_ref = $PLUGIN_MODULE->can($method);
     return $method_ref->($plugin, @_) if $method_ref;
     croak $plugin->translate(
         'Failed to find '.$PLUGIN_MODULE.'::[_1]', $method);
-    # $logger->logcroak($plugin->translate(
-        # 'Failed to find '.$PLUGIN_MODULE.'::[_1]', $method));
+    ##l4p $logger->logcroak($plugin->translate(
+    ##l4p    'Failed to find '.$PLUGIN_MODULE.'::[_1]', $method));
 }
 
 sub translate {
@@ -226,14 +225,14 @@ sub current_blog {
             class    => 'system',
             category => 'notifywho'
         });
-        # $logger->error($msg);
+        ##l4p $logger->error($msg);
     }
     return $blog;
 }
 
 # sub notification_post_save {
 #     my ($cb, $obj, $orig_obj) = @_;
-#     $logger->trace('Saying hell from the new callback!');
+#     ##l4p $logger->trace('Saying hell from the new callback!');
 #     # Move me to the right place please...
 # }
 
