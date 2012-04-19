@@ -58,14 +58,14 @@ MT->add_plugin($plugin = __PACKAGE__->new({
 sub init_registry {
     my $plugin = shift;
 
-    # unless ($logger) {        
+    # unless ($logger) {
     #     require MT::Log::Log4perl;
     #     import MT::Log::Log4perl qw(l4mtdump);
     #     $logger = MT::Log::Log4perl->new();
     # }
 
     # Register callbacks with MT
-    $plugin->registry({ 
+    $plugin->registry({
         object_types  => { 'nwnotification' => 'NotifyWho::Notification' },
         callbacks => {
 
@@ -73,7 +73,7 @@ sub init_registry {
             # after an entry is newly published.
             'cms_post_save.entry'
                             => sub { runner('autosend_entry_notify', @_) },
-            
+
             # This callback handles sending notifications for an entry created
             # through the API, such as the Community Pack does.
             'api_post_save.entry'
@@ -89,15 +89,15 @@ sub init_registry {
             # a clicakable list of possible recipients
             'MT::App::CMS::template_param.entry_notify'
                             => sub { runner('entry_notify_param', @_) },
-            
-            # This handler inserts a switch for disabling automatic entry 
+
+            # This handler inserts a switch for disabling automatic entry
             # notifications on a per entry basis
             'MT::App::CMS::template_param.edit_entry'
                             => sub { runner('edit_entry_param', @_) },
 
             # This handler inserts NotifyWho's javascript into the application
             # pages' header section notifications on a per entry basis
-            'MT::App::CMS::template_source.header' 
+            'MT::App::CMS::template_source.header'
                             => sub { runner('add_notifywho_js', @_) },
 
             # This handler records the notification recipients in the database
@@ -117,12 +117,12 @@ sub init_registry {
 #     my $plugin = shift;
 #     my ($app) = @_;
 #     $logger->trace();
-# 
+#
 #     # TODO Disable ThrottleSeconds disabling
 #     $app->config('ThrottleSeconds', 0);
-# 
+#
 #     # Uncomment to set test configuration
-#     # $plugin->test_config($app);    
+#     # $plugin->test_config($app);
 # }
 
 sub load_config {
@@ -143,7 +143,7 @@ sub save_config {
     require MT::Util;
 
     $plugin->convert_config($param);
-    
+
     # Specifically set notifywho_author to 0 if not set
     $param->{nw_fback_author}       ||= 0;
     $param->{nw_entry_list}         ||= 0;
@@ -157,7 +157,7 @@ sub save_config {
             = grep(! $seen{$_}++ && MT::Util::is_valid_email($_), @emails);
         $param->{$key} = join(', ',@emails);
         # $logger->debug("FINAL $key VALUE: ", $param->{$key});
-        
+
     }
 
     # Send the params to mommy for safe keeping
@@ -184,13 +184,13 @@ sub convert_config {
     if (defined $hash->{nw_entry_send_excerpt}) {
         delete $hash->{nw_entry_send_excerpt};
         $hash->{nw_entry_text} = 'excerpt';
-    }    
+    }
     $hash;
 }
 
 sub runner {
     # $logger->debug(sprintf 'IN RUNNER ARG: %s %s', ref $_, $_) foreach @_;
-    
+
     shift if ref($_[0]) eq ref($plugin);
     my $method = shift;
     $PLUGIN_MODULE = plugin_module();
@@ -198,7 +198,7 @@ sub runner {
     if ($@) { print STDERR $@; $@ = undef; return 1; }
 
     # $logger->debug(sprintf 'Looking for %s in module %s', $method, $PLUGIN_MODULE);
-    
+
     my $method_ref = $PLUGIN_MODULE->can($method);
     return $method_ref->($plugin, @_) if $method_ref;
     croak $plugin->translate(
@@ -217,7 +217,7 @@ sub current_blog {
     my $app = MT->instance or return;
     my $blog = $app->blog;
     if (!$blog) {
-        my $msg 
+        my $msg
             = 'No blog in context in '.__PACKAGE__.'::current_blog. Called by '.(caller(1))[3];
         require MT::Log;
         $app->log({

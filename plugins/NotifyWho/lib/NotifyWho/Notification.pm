@@ -33,7 +33,7 @@ __PACKAGE__->install_properties({
 sub save_multiple {
     my ($class, $args) = @_;
     ref($class) and return $class->error('save_multiple is a class method');
-    
+
     # Creating NotifyWho::Notification records
     foreach my $email (@{$args->{recipients}}) {
         $email =~ s{(.*?<|\s|>.*)}{}g;
@@ -44,7 +44,7 @@ sub save_multiple {
             'email'             => $email,
         });
         unless ($note->save) {
-            my $msg 
+            my $msg
                 = 'Could not save NotifyWho notification: '.$note->errstr;
             MT->log({
                 message  => $msg,
@@ -57,6 +57,6 @@ sub save_multiple {
             # $logger->error($msg);
         }
     }
-}        
+}
 
 1;

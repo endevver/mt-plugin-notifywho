@@ -16,7 +16,7 @@ function toggle_notifications() {
     } else {
         auto.value = 1;
         text.innerHTML = 'Enabled'
-    }    
+    }
     log.debug(auto.value);
 }
 
@@ -25,7 +25,7 @@ function add_recipient(addr) {
     if (emails.value != '') {
         emails.value = emails.value+', '+addr;
     } else {
-        emails.value = addr;        
+        emails.value = addr;
     }
 }
 
