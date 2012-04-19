@@ -113,7 +113,7 @@ sub autosend_entry_notify {
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     my $send_status = $app->request('notifywho_already_sent') || {};
-    return if $send_status->{ sent } == 1;
+    return if $send_status->{sent};
 
     ###l4p $logger->debug('$entry: ', l4mtdump($entry));
     ###l4p $logger->debug('$orig_obj: ', l4mtdump($orig_obj));
@@ -197,7 +197,7 @@ sub autosend_entry_notify {
     ###l4p $logger->debug('Notifications sent.');
     delete $app->{$_} foreach (qw(redirect redirect_use_meta));
     ###l4p $logger->error($app->errstr) if $app->errstr;
-    $send_status->{ sent } = 1;
+    $app->request('notifywho_already_sent', { sent => 1 });
     $rc;
 }
 
