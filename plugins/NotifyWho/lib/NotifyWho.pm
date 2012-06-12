@@ -134,7 +134,7 @@ sub autosend_entry_notify {
     # Check to see if this function is enabled in plugin settings
     my $blog = $entry->blog;
     if (!$blog) {
-        my $msg = "No blog in context in NotfyWho post_save_entry callback";
+        my $msg = "No blog in context in NotifyWho post_save_entry callback";
         require MT::Log;
         $app->log({
             message  => $msg,
@@ -403,7 +403,7 @@ sub _possible_recipients {
 sub _notification_screen_defaults {
     my $plugin = shift;
     my ($cb, $app, $param, $tmpl) = @{$_[0]};
-    ##l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     my $entry_id = $app->param('entry_id') or return;
     my $entry = MT::Entry->load($entry_id);
@@ -411,7 +411,7 @@ sub _notification_screen_defaults {
     my $blogarg = 'blog:'.$app->blog->id;
     my $cfg = $plugin->get_config_hash($blogarg) || {};
 
-    # $logger->debug('CFG: ', l4mtdump($cfg));
+    ###l4p $logger->debug('CFG: ', l4mtdump($cfg));
 
     {
         my $input = $tmpl->getElementById('send_notify_list');
