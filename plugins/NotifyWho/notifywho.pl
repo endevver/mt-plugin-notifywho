@@ -194,7 +194,14 @@ sub runner {
     my $method = shift;
     $PLUGIN_MODULE = plugin_module();
     eval "require $PLUGIN_MODULE";
-    if ($@) { print STDERR $@; $@ = undef; return 1; }
+    if ($@) {
+        # STDERR isn't necessarily an obvious place to look for things...
+        # print to the MT Activity Log, too.
+        print STDERR $@;
+        MT->log("NotifyWho error: ".$@);
+        $@ = undef;
+        return 1;
+    }
 
     ##l4p $logger->debug(sprintf 'Looking for %s in module %s', $method, $PLUGIN_MODULE);
 
