@@ -15,31 +15,30 @@ use MT::Mail;
 use NotifyWho::Notification;
 
 # Public version number
-our $VERSION = "2.0";
+our $VERSION = "2.0.3";
 
 # Development revision number
-our $Revision = ('$Revision: 504 $ ' =~ /(\d+)/);
-my $beta_notice = " (Beta 1, revision $Revision)";
+#our $Revision = ('$Revision: 504 $ ' =~ /(\d+)/);
+#my $beta_notice = " (Beta 1, revision $Revision)";
 
 our ($plugin, $PLUGIN_MODULE, $PLUGIN_KEY);
 MT->add_plugin($plugin = __PACKAGE__->new({
-    name            => 'Notify Who?!'.$beta_notice,
+    name            => 'Notify Who?!',
     version         => $VERSION,
     schema_version  => 2,
     key             => plugin_key(),
     author_name     => 'Jay Allen',
     author_link     => (our $JA = 'http://jayallen.org'),
-    plugin_link     => $JA. '/projects/notifywho/',
-    description     => '<MT_TRANS phrase="NOTIFYWHO_PLUGIN_DESCRIPTION">'
-                        . "<!-- (Revision: $Revision) -->",
-    # doc_link        => $JA. '/projects/notifywho/docs/v'.$VERSION,
+    plugin_link     => 'https://github.com/endevver/mt-plugin-notifywho',
+    description     => '<MT_TRANS phrase="NOTIFYWHO_PLUGIN_DESCRIPTION">',
     l10n_class      => 'NotifyWho::L10N',
     blog_config_template => 'blog_config.tmpl',
     settings => new MT::PluginSettings([
         ['nw_fback_author',         { Default => 1 }],
         ['nw_fback_emails',         { Default => '' }],
         ['nw_fback_list',           { Default => 0 }],
-        ['nw_entry_auto',           { Default => 0 }],
+        ['nw_entry_auto',           { Default => 0 }], # entry publication
+        ['nw_entry_created_auto',   { Default => 0 }], # entry creation
         ['nw_entry_list',           { Default => 0 }],
         ['nw_entry_emails',         { Default => '' }],
         ['nw_entry_message',        { Default => '' }],
@@ -52,27 +51,31 @@ MT->add_plugin($plugin = __PACKAGE__->new({
     ]),
 }));
 
-# use MT::Log::Log4perl qw(l4mtdump);
-# use vars qw($logger);
-# $logger = MT::Log::Log4perl->new();
+# use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
+###l4p our $logger = MT::Log::Log4perl->new();
 
 sub init_registry {
     my $plugin = shift;
 
-    # unless ($logger) {        
+    # unless ($logger) {
     #     require MT::Log::Log4perl;
     #     import MT::Log::Log4perl qw(l4mtdump);
     #     $logger = MT::Log::Log4perl->new();
     # }
 
     # Register callbacks with MT
-    $plugin->registry({ 
+    $plugin->registry({
         object_types  => { 'nwnotification' => 'NotifyWho::Notification' },
         callbacks => {
 
             # If enabled, this callback handles the sending of notifications
             # after an entry is newly published.
             'cms_post_save.entry'
+                            => sub { runner('autosend_entry_notify', @_) },
+
+            # This callback handles sending notifications for an entry created
+            # through the API, such as the Community Pack does.
+            'api_post_save.entry'
                             => sub { runner('autosend_entry_notify', @_) },
 
             # This callback handles notification modifications for feedback
@@ -85,15 +88,25 @@ sub init_registry {
             # a clicakable list of possible recipients
             'MT::App::CMS::template_param.entry_notify'
                             => sub { runner('entry_notify_param', @_) },
-            
-            # This handler inserts a switch for disabling automatic entry 
+
+            # This handler inserts a switch for disabling automatic entry
             # notifications on a per entry basis
             'MT::App::CMS::template_param.edit_entry'
                             => sub { runner('edit_entry_param', @_) },
 
+            # This handler adds the automatic entry notification flag to the
+            # Photo Gallery plugin's batch upload screen.
+            'MT::App::CMS::template_param.batch_upload'
+                            => sub { runner('photo_gallery_template_param', @_) },
+
+            # This handler adds the automatic entry notification flag to the
+            # Photo Gallery plugin's popup upload screen.
+            'MT::App::CMS::template_param.edit_photo'
+                            => sub { runner('photo_gallery_template_param', @_) },
+
             # This handler inserts NotifyWho's javascript into the application
             # pages' header section notifications on a per entry basis
-            'MT::App::CMS::template_source.header' 
+            'MT::App::CMS::template_source.header'
                             => sub { runner('add_notifywho_js', @_) },
 
             # This handler records the notification recipients in the database
@@ -112,34 +125,34 @@ sub init_registry {
 # sub init_request {
 #     my $plugin = shift;
 #     my ($app) = @_;
-#     $logger->trace();
-# 
+#     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
+#
 #     # TODO Disable ThrottleSeconds disabling
 #     $app->config('ThrottleSeconds', 0);
-# 
+#
 #     # Uncomment to set test configuration
-#     # $plugin->test_config($app);    
+#     # $plugin->test_config($app);
 # }
 
 sub load_config {
     my $plugin = shift;
     my ($param, $scope) = @_;
-    # $logger->trace();
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     $plugin->SUPER::load_config(@_);
     $plugin->convert_config($param);
-    # $logger->debug("\$param for scope $scope: ", l4mtdump($param));
+    ##l4p $logger->debug("\$param for scope $scope: ", l4mtdump($param));
     $param;
 }
 
 sub save_config {
     my $plugin = shift;
     my ($param, $scope) = @_;
-    # $logger->trace();
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     require MT::Util;
 
     $plugin->convert_config($param);
-    
+
     # Specifically set notifywho_author to 0 if not set
     $param->{nw_fback_author}       ||= 0;
     $param->{nw_entry_list}         ||= 0;
@@ -152,8 +165,8 @@ sub save_config {
         @emails
             = grep(! $seen{$_}++ && MT::Util::is_valid_email($_), @emails);
         $param->{$key} = join(', ',@emails);
-        # $logger->debug("FINAL $key VALUE: ", $param->{$key});
-        
+        ##l4p $logger->debug("FINAL $key VALUE: ", $param->{$key});
+
     }
 
     # Send the params to mommy for safe keeping
@@ -180,27 +193,34 @@ sub convert_config {
     if (defined $hash->{nw_entry_send_excerpt}) {
         delete $hash->{nw_entry_send_excerpt};
         $hash->{nw_entry_text} = 'excerpt';
-    }    
+    }
     $hash;
 }
 
 sub runner {
-    # $logger->debug(sprintf 'IN RUNNER ARG: %s %s', ref $_, $_) foreach @_;
-    
+    ##l4p $logger->debug(sprintf 'IN RUNNER ARG: %s %s', ref $_, $_) foreach @_;
+
     shift if ref($_[0]) eq ref($plugin);
     my $method = shift;
     $PLUGIN_MODULE = plugin_module();
     eval "require $PLUGIN_MODULE";
-    if ($@) { print STDERR $@; $@ = undef; return 1; }
+    if ($@) {
+        # STDERR isn't necessarily an obvious place to look for things...
+        # print to the MT Activity Log, too.
+        print STDERR $@;
+        MT->log("NotifyWho error: ".$@);
+        $@ = undef;
+        return 1;
+    }
 
-    # $logger->debug(sprintf 'Looking for %s in module %s', $method, $PLUGIN_MODULE);
-    
+    ##l4p $logger->debug(sprintf 'Looking for %s in module %s', $method, $PLUGIN_MODULE);
+
     my $method_ref = $PLUGIN_MODULE->can($method);
     return $method_ref->($plugin, @_) if $method_ref;
     croak $plugin->translate(
         'Failed to find '.$PLUGIN_MODULE.'::[_1]', $method);
-    # $logger->logcroak($plugin->translate(
-        # 'Failed to find '.$PLUGIN_MODULE.'::[_1]', $method));
+    ##l4p $logger->logcroak($plugin->translate(
+    ##l4p    'Failed to find '.$PLUGIN_MODULE.'::[_1]', $method));
 }
 
 sub translate {
@@ -213,7 +233,7 @@ sub current_blog {
     my $app = MT->instance or return;
     my $blog = $app->blog;
     if (!$blog) {
-        my $msg 
+        my $msg
             = 'No blog in context in '.__PACKAGE__.'::current_blog. Called by '.(caller(1))[3];
         require MT::Log;
         $app->log({
@@ -222,14 +242,14 @@ sub current_blog {
             class    => 'system',
             category => 'notifywho'
         });
-        # $logger->error($msg);
+        ##l4p $logger->error($msg);
     }
     return $blog;
 }
 
 # sub notification_post_save {
 #     my ($cb, $obj, $orig_obj) = @_;
-#     $logger->trace('Saying hell from the new callback!');
+#     ##l4p $logger->trace('Saying hell from the new callback!');
 #     # Move me to the right place please...
 # }
 

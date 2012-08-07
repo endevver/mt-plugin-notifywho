@@ -6,17 +6,17 @@
 
 # NotifyWho?! localization file
 #
-# This package defines the English phrases used by the plugin 
+# This package defines the English phrases used by the plugin
 # and can be used as a basis for localization of NotifyWho?!
 #
 # To create a localization, simply do the following:
 #
-# 1) Create a copy of this file with a name beginning with your 
-#    language code and ending in '.pm'.  For example, a French 
+# 1) Create a copy of this file with a name beginning with your
+#    language code and ending in '.pm'.  For example, a French
 #    localization file would be named 'fr.pm'.
 # 2) Translate the strings on the right side of the => operators
 #    below.  You must use a backslash to escape single quotes.
-# 3) Replace all occurances of 'en_us' in this file with your 
+# 3) Replace all occurances of 'en_us' in this file with your
 #    own language code
 #
 package NotifyWho::L10N::en_us;
@@ -53,5 +53,5 @@ if ($MT::VERSION < 3.3) {
     $MT::L10N::en_us::Lexicon{$_} = $Lexicon{$_}
         foreach keys %Lexicon;
 }
-    
+
 1;
