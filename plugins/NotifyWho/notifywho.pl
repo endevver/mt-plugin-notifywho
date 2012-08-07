@@ -94,6 +94,16 @@ sub init_registry {
             'MT::App::CMS::template_param.edit_entry'
                             => sub { runner('edit_entry_param', @_) },
 
+            # This handler adds the automatic entry notification flag to the
+            # Photo Gallery plugin's batch upload screen.
+            'MT::App::CMS::template_param.batch_upload'
+                            => sub { runner('photo_gallery_template_param', @_) },
+
+            # This handler adds the automatic entry notification flag to the
+            # Photo Gallery plugin's popup upload screen.
+            'MT::App::CMS::template_param.edit_photo'
+                            => sub { runner('photo_gallery_template_param', @_) },
+
             # This handler inserts NotifyWho's javascript into the application
             # pages' header section notifications on a per entry basis
             'MT::App::CMS::template_source.header'

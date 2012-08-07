@@ -104,6 +104,28 @@ sub edit_entry_param {
 
 }
 
+# photog_gallery_template_param
+#
+# The Photo Gallery plugin creates new entries, but not with the traditional
+# Edit Entry interface; a special photo upload/batch photo upload tool does
+# the work. Insert the `auto_notifications` input so that NotifyWho can send
+# notifications, if configured to do so.
+sub photo_gallery_template_param {
+    my $plugin = shift;
+    my ($cb, $app, $param, $tmpl) = @_;
+
+    my $node = $tmpl->createTextNode(
+        '<input type="hidden" name="auto_notifications" value="1" />'
+    );
+
+    $tmpl->insertAfter(
+        $node,
+        ( $tmpl->getElementById('title')        # The batch upload screen
+          || $tmpl->getElementById('file_name') # The popup dialog screen
+        )
+    );
+}
+
 # autosend_entry_notify
 #
 # This is the handler for the cms_post_save.entry callback which handles
@@ -282,6 +304,11 @@ sub _automatic_notifications {
 
     my $blogarg = 'blog:'.$app->blog->id;
 
+    # Is this a bug?
+    # As this is written, notify upon entry creation *and* notify upon entry
+    # publication must be true. But, either one should be enough for
+    # notification, right?
+
     # Notify upon entry creation?
     my $auto
        = $plugin->get_config_value('nw_entry_created_auto', $blogarg) || 0;
@@ -400,6 +427,8 @@ sub _possible_recipients {
 
 }
 
+# Update the contents of the Send a Notification popup dialog, found when
+# clicking the Share link on an Entry or Page.
 sub _notification_screen_defaults {
     my $plugin = shift;
     my ($cb, $app, $param, $tmpl) = @{$_[0]};
