@@ -17,7 +17,7 @@ link directly about the entry save/preview buttons.
 
 # Requirements
 
-* Movable Type 4.1 or higher
+* Movable Type 4.x or 5.x
 * A working email notification system
 * Ability to install plugins
 * Permission to configure a blog and its plugins
