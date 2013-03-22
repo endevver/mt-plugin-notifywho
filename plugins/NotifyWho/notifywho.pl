@@ -15,7 +15,7 @@ use MT::Mail;
 use NotifyWho::Notification;
 
 # Public version number
-our $VERSION = "2.0.3";
+our $VERSION = "2.0.4";
 
 # Development revision number
 #our $Revision = ('$Revision: 504 $ ' =~ /(\d+)/);
