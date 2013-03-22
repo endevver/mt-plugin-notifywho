@@ -7,7 +7,7 @@
 package NotifyWho;
 use strict;
 use Data::Dumper;
-use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
+#use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 ###l4p our $logger = MT::Log::Log4perl->new();
 
 use MT::Util qw( is_valid_email );
