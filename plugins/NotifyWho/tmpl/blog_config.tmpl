@@ -57,16 +57,16 @@
     <mtapp:setting
         id="nw_entry_auto_setting"
         label="<__trans phrase="Automatic notification">"
-        hint="<__trans phrase="If checked, automatic delivery can be overridden on a per-entry basis.">"
+        hint="<__trans phrase="Notifications are only sent once per entry.">"
         show_hint="1">
 
         <div>
             <input type="checkbox" name="nw_entry_created_auto" id="nw_entry_created_auto" value="1" <mt:if name="nw_entry_created_auto_1">checked="checked"</mt:if> />
-            <label for="nw_entry_created_auto"><__trans phrase="Send a notification automatically when a new entry is created."></label>
+            <label for="nw_entry_created_auto"><__trans phrase="Send a notification when a new entry is created."></label>
         </div>
         <div>
             <input type="checkbox" name="nw_entry_auto" id="nw_entry_auto" value="1" <mt:if name="nw_entry_auto_1">checked="checked"</mt:if> />
-            <label for="nw_entry_auto"><__trans phrase="Send a notification automatically when a new entry is published."></label>
+            <label for="nw_entry_auto"><__trans phrase="Send a notification when an entry is published or scheduled to be published."></label>
         </div>
     </mtapp:setting>
 

@@ -197,7 +197,7 @@ sub autosend_entry_notify {
         return;
     }
     elsif ( ! _is_new_entry($notify_upon_create, $entry, $orig_obj) ) {
-        ###l4p $logger->debug('NOT A NEW ENTRY - Aborting send notify');
+        ###l4p $logger->debug('NOT A NEW ENTRY OR NOTIFY ON CREATE TURNED OFF - Aborting send notify');
         return;
     }
 
@@ -305,20 +305,9 @@ sub _automatic_notifications {
 
     my $blogarg = 'blog:'.$app->blog->id;
 
-    # Is this a bug?
-    # As this is written, notify upon entry creation *and* notify upon entry
-    # publication must be true. But, either one should be enough for
-    # notification, right?
-
-    # Notify upon entry creation?
-    my $auto
-       = $plugin->get_config_value('nw_entry_created_auto', $blogarg) || 0;
-    return unless $auto;
-
-    # Or notify upon entry publication?
-    $auto
-       = $plugin->get_config_value('nw_entry_auto', $blogarg) || 0;
-    return unless $auto;
+    # hide the toggle (thereby disabling notifications) on draft entries unless "on publish" enabled
+    my $auto = $plugin->get_config_value('nw_entry_auto', $blogarg) || 0;
+    return unless $auto || $param->{status} != 1;
 
     my $node = $tmpl->createTextNode(<<EOM);
         <p>Automatic notifications for this entry are: <a href="javascript:void(0)" onclick="toggle_notifications(); return false;" id="auto_notifications_link">Enabled</a><input type="hidden" name="auto_notifications" id="auto_notifications" value="$auto" /></p>
