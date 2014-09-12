@@ -69,6 +69,11 @@ sub init_registry {
         callbacks => {
 
             # If enabled, this callback handles the sending of notifications
+            # after an entry is published by Batch Edit or Manage Entries screen.
+            'cms_post_bulk_save.entries'
+                            => sub { runner('autosend_entry_notify_bulk', @_) },
+
+            # If enabled, this callback handles the sending of notifications
             # after an entry is newly published.
             'cms_post_save.entry'
                             => sub { runner('autosend_entry_notify', @_) },

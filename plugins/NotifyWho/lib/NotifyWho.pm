@@ -126,6 +126,23 @@ sub photo_gallery_template_param {
     );
 }
 
+# autosend_entry_notify_bulk
+#
+# This is the handler for the cms_post_bulk_save.entries callback which handles
+# automatic entry notifications if enabled and configured.
+sub autosend_entry_notify_bulk {
+    my ($plugin, $cb, $app, $objects) = @_;
+    my $debug = $plugin->get_config_value('nw_debug_mode');
+    log_message('Running bulk save', $debug, 'info', $app->blog->id);
+    #$Data::Dumper::Maxdepth = 3; # no deeper than 3 refs down
+    #log_message('All objects: ' . Dumper($objects), $debug, 'info', $app->blog->id);
+    for my $o (@$objects)
+    {
+      log_message('Current object: ' . Dumper(${$o}{original}->title), $debug, 'info', $app->blog->id);
+      autosend_entry_notify($plugin, $cb, $app, ${$o}{current}, ${$o}{original}, 1)
+    }
+}
+
 # autosend_entry_notify
 #
 # This is the handler for the cms_post_save.entry callback which handles
@@ -134,23 +151,31 @@ sub autosend_entry_notify {
     my ($plugin, $cb, $app, $entry, $orig_obj) = @_;
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
-    my $send_status = $app->request('notifywho_already_sent') || {};
-    return if $send_status->{sent};
+    # check if this sub was called by the cms_post_bulk_save.entries callback
+    # if so, we don't need to check for the "auto_notifications" toggle
+    my $bulk = shift;
+    unless ($bulk) {
 
-    ###l4p $logger->debug('$entry: ', l4mtdump($entry));
-    ###l4p $logger->debug('$orig_obj: ', l4mtdump($orig_obj));
+        my $send_status = $app->request('notifywho_already_sent') || {};
+        return if $send_status->{sent};
 
-    # On the Edit Entry screen, Notify Who adds a switch to enable/disable
-    # notifications for that entry, called "auto_notifications".
-    # The "auto_notifications" parameter is set only if this new entry is
-    # created within the MT admin interface. If this is an entry created from
-    # the Community Pack, then the parameter doesn't exist.
-    if ( !$app->isa('MT::App::Community')
-        && !$app->{query}->param('auto_notifications')
-    ) {
-        ###l4p $logger->debug('Auto-notifications are DISABLED for the current entry.');
-        return;
+        ###l4p $logger->debug('$entry: ', l4mtdump($entry));
+        ###l4p $logger->debug('$orig_obj: ', l4mtdump($orig_obj));
+
+        # On the Edit Entry screen, Notify Who adds a switch to enable/disable
+        # notifications for that entry, called "auto_notifications".
+        # The "auto_notifications" parameter is set only if this new entry is
+        # created within the MT admin interface. If this is an entry created from
+        # the Community Pack, then the parameter doesn't exist.
+        if ( !$app->isa('MT::App::Community')
+            && !$app->{query}->param('auto_notifications')
+        ) {
+            ###l4p $logger->debug('Auto-notifications are DISABLED for the current entry.');
+            return;
+        }
+
     }
+
     ###l4p $logger->debug('Auto-notifications are ENABLED. Commencing now...');
 
     # Check to see if this function is enabled in plugin settings
@@ -219,7 +244,10 @@ sub autosend_entry_notify {
     ###l4p $logger->debug('Notifications sent.');
     delete $app->{$_} foreach (qw(redirect redirect_use_meta));
     ###l4p $logger->error($app->errstr) if $app->errstr;
-    $app->request('notifywho_already_sent', { sent => 1 });
+    # todo: make this store value per entry to properly handle bulk saves
+    unless ($bulk) {
+      $app->request('notifywho_already_sent', { sent => 1 });
+    }
     $rc;
 }
 
