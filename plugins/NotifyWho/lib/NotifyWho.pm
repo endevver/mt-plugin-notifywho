@@ -495,10 +495,10 @@ sub _is_new_entry {
     my ($notify_upon_create, $entry, $orig_obj) = @_;
 
     return (
-            ($notify_upon_create && !$orig_obj)         # Notify of new entry
+            ($notify_upon_create && (!$orig_obj || !$orig_obj->id)) # Notify of new entry
         ||
             ($entry->status == MT::Entry::RELEASE)      # Is now published
-        && (! $orig_obj                                 # Is a new entry
+        && ((!$orig_obj || !$orig_obj->id)              # Is a new entry
             || $orig_obj->status != MT::Entry::RELEASE) # Was not published
         || 0
     );
