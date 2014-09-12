@@ -37,6 +37,7 @@ MT->add_plugin($plugin = __PACKAGE__->new({
         ['nw_fback_author',         { Default => 1 }],
         ['nw_fback_emails',         { Default => '' }],
         ['nw_fback_list',           { Default => 0 }],
+        ['nw_entry_force',          { Default => 0 }], # disallow user from disabling
         ['nw_entry_auto',           { Default => 0 }], # entry publication
         ['nw_entry_created_auto',   { Default => 0 }], # entry creation
         ['nw_entry_list',           { Default => 0 }],

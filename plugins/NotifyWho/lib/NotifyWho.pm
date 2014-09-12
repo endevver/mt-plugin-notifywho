@@ -337,9 +337,16 @@ sub _automatic_notifications {
     my $auto = $plugin->get_config_value('nw_entry_auto', $blogarg) || 0;
     return unless $auto || $param->{status} != 1;
 
+    my $hiddeninput = '<input type="hidden" name="auto_notifications" id="auto_notifications" value="1" />';
     my $node = $tmpl->createTextNode(<<EOM);
-        <p>Automatic notifications for this entry are: <a href="javascript:void(0)" onclick="toggle_notifications(); return false;" id="auto_notifications_link">Enabled</a><input type="hidden" name="auto_notifications" id="auto_notifications" value="$auto" /></p>
+        <p>Automatic notifications for this entry are: <a href="javascript:void(0)" onclick="toggle_notifications(); return false;" id="auto_notifications_link">Enabled</a>$hiddeninput</p>
 EOM
+
+    # if forced option set, hide the toggle by overwriting node
+    # but keep the hidden form input to keep notifications working,
+    my $force = $plugin->get_config_value('nw_entry_force', $blogarg) || 0;
+    $node = $tmpl->createTextNode($hiddeninput) if ($force);
+
     $tmpl->insertAfter($node, $tmpl->getElementById('keywords'));
 }
 
