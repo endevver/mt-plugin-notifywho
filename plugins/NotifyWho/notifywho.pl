@@ -32,8 +32,10 @@ MT->add_plugin($plugin = __PACKAGE__->new({
     plugin_link     => 'https://github.com/endevver/mt-plugin-notifywho',
     description     => '<MT_TRANS phrase="NOTIFYWHO_PLUGIN_DESCRIPTION">',
     l10n_class      => 'NotifyWho::L10N',
+    config_template => 'system_config.tmpl',
     blog_config_template => 'blog_config.tmpl',
     settings => new MT::PluginSettings([
+        ['nw_debug_mode',           { Default => 0 }],
         ['nw_fback_author',         { Default => 1 }],
         ['nw_fback_emails',         { Default => '' }],
         ['nw_fback_list',           { Default => 0 }],

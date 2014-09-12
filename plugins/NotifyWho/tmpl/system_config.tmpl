@@ -1,0 +1,17 @@
+<!--
+# NotifyWho?! plugin for Movable Type
+# Author: Jay Allen, Six Apart (http://www.sixapart.com)
+# Released under the Artistic License
+#
+# $Id: blog_config.tmpl 504 2008-02-28 02:11:03Z jallen $
+-->
+
+    <mtapp:setting
+        id="nw_debug_log"
+        label="<__trans phrase="Activity Logging">">
+
+        <p>
+            <input type="checkbox" name="nw_debug_mode" id="nw_debug_mode" value="1" <mt:if name="nw_debug_mode">checked="checked"</mt:if> />
+            <label for="nw_debug_mode">Log debugging information to the Activity Log.</label>
+        </p>
+    </mtapp:setting>
