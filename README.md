@@ -5,9 +5,9 @@ entry, comment and TrackBack notifications for each blog.
 
 You can configure the plugin to send them to:
 
-   * The Entry author (MT default)
+   * The Entry author (Movable Type default)
    * One or more arbitrary email addresses
-   * The blog's address book (i.e. notification list)
+   * The blog’s [address book](https://movabletype.org/documentation/appendices/config-directives/enableaddressbook.html) (i.e. notification list)
    * Any of the above
 
 For entry notifications, you can configure the plugin to send them
@@ -17,7 +17,7 @@ link directly about the entry save/preview buttons.
 
 # Requirements
 
-* Movable Type 4.x or 5.x
+* Movable Type 4+
 * A working email notification system
 * Ability to install plugins
 * Permission to configure a blog and its plugins
