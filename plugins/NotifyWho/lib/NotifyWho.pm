@@ -300,7 +300,8 @@ sub _automatic_notifications {
     my ($cb, $app, $param, $tmpl) = @{$_[0]};
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
-    return unless $param->{new_object};
+    # hide the toggle (thereby disabling notifications) on published or scheduled entries
+    return if $param->{status} == 2 || $param->{status} == 4;
 
     my $blogarg = 'blog:'.$app->blog->id;
 
