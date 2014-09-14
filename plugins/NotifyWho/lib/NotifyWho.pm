@@ -158,8 +158,7 @@ sub autosend_entry_notify_bulk {
     log_message('Running bulk save', $debug, 'info', $app->blog->id);
     #$Data::Dumper::Maxdepth = 3; # no deeper than 3 refs down
     #log_message('All objects: ' . Dumper($objects), $debug, 'info', $app->blog->id);
-    for my $o (@$objects)
-    {
+    for my $o (@$objects) {
         log_message('Current object: ' . Dumper(${$o}{original}->title), $debug, 'info', $app->blog->id);
         autosend_entry_notify($plugin, $cb, $app, ${$o}{current}, ${$o}{original}, 1)
     }
@@ -215,6 +214,17 @@ sub autosend_entry_notify {
         = $plugin->get_config_value('nw_entry_list', $blogarg) || 0;
     my $notify_emails
         = $plugin->get_config_value('nw_entry_emails', $blogarg) || '';
+    if ($plugin->get_config_value('nw_entry_author', $blogarg)) {
+        {
+            my $author = MT::Author->load($entry->author_id);
+            my $author_email = $author->email || '' if $author;
+            last unless $author_email;
+            if($notify_emails) {
+                $notify_emails .= ',';
+            }
+            $notify_emails .= $author_email;
+        }
+    }
     my $message
         = $plugin->get_config_value('nw_entry_message', $blogarg) || '';
     my $entry_text_cfg
@@ -240,14 +250,14 @@ sub autosend_entry_notify {
         log_message('NOTIFICATIONS PREVIOUSLY SENT - Aborting send notify', $debug, 'info', $app->blog->id);
         return;
     }
-    elsif ( ! _is_new_entry($notify_upon_create, $entry, $orig_obj) ) {
-        log_message('NOT A NEW ENTRY OR NOTIFY ON CREATE TURNED OFF - Aborting send notify',
+    elsif ( ! _is_new_entry_or_just_published($notify_upon_create, $entry, $orig_obj) ) {
+        log_message('NOT A NEW OR NEWLY PUBLISHED ENTRY OR NOTIFY ON CREATE TURNED OFF - Aborting send notify',
             $debug, 'info', $app->blog->id);
         return;
     }
 
-    log_message('Preparing to send notifications',
-        $debug, 'info', $app->blog->id);
+    my $msg = 'Preparing to send notifications to ' . $notify_emails . ( $notify_list ? ' and the blog list.' : '' );
+    log_message($msg, $debug, 'info', $app->blog->id);
 
     # Set params for MT::App::CMS::send_notify()
     $app->mode('send_notify');
@@ -454,7 +464,7 @@ sub _possible_recipients {
 
         my $iter = NotifyWho::Notification->load_iter($blog_arg);
         if (!$iter and NotifyWho::Notification->errstr) {
-          log_message(NotifyWho::Notification->errstr, $debug, 'error', $app->blog->id);
+            log_message(NotifyWho::Notification->errstr, $debug, 'error', $app->blog->id);
         }
         while (my $recip = $iter->()) {
             next if  $recip->email eq $author->email
@@ -506,8 +516,19 @@ sub _notification_screen_defaults {
         $cfg->{nw_entry_list}
             or $html =~ s/ checked="checked"//; # Remove check
 
-        $cfg->{nw_entry_emails}
-            and $html =~ s{(\</textarea\>)}{$cfg->{nw_entry_emails}$1}x;
+        my $notify_emails = '';
+        if ($cfg->{nw_entry_author}) {
+            my $author = MT::Author->load($entry->author_id) if $entry;
+            $notify_emails = $author->email if $author;
+        }
+        if ($cfg->{nw_entry_emails}) {
+            if($notify_emails) {
+                $notify_emails .= ',';
+            }
+            $notify_emails .= $cfg->{nw_entry_emails};
+        }
+        $notify_emails
+            and $html =~ s{(\</textarea\>)}{$notify_emails$1}x;
 
         $input->innerHTML($html);
     }
@@ -546,7 +567,7 @@ sub _blog_subscribers {
     return (MT::Notification->load({blog_id => $blog_id}));
 }
 
-sub _is_new_entry {
+sub _is_new_entry_or_just_published {
     my ($notify_upon_create, $entry, $orig_obj) = @_;
 
     return (
@@ -597,3 +618,4 @@ sub _sent_notifications {
 1;
 
 __END__
+
