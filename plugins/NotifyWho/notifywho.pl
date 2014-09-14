@@ -15,7 +15,7 @@ use MT::Mail;
 use NotifyWho::Notification;
 
 # Public version number
-our $VERSION = "2.0.5";
+our $VERSION = "2.1.2";
 
 # Development revision number
 #our $Revision = ('$Revision: 504 $ ' =~ /(\d+)/);
@@ -32,13 +32,17 @@ MT->add_plugin($plugin = __PACKAGE__->new({
     plugin_link     => 'https://github.com/endevver/mt-plugin-notifywho',
     description     => '<MT_TRANS phrase="NOTIFYWHO_PLUGIN_DESCRIPTION">',
     l10n_class      => 'NotifyWho::L10N',
+    config_template => 'system_config.tmpl',
     blog_config_template => 'blog_config.tmpl',
     settings => new MT::PluginSettings([
+        ['nw_debug_mode',           { Default => 0 }],
         ['nw_fback_author',         { Default => 1 }],
         ['nw_fback_emails',         { Default => '' }],
         ['nw_fback_list',           { Default => 0 }],
+        ['nw_entry_force',          { Default => 0 }], # disallow user from disabling
         ['nw_entry_auto',           { Default => 0 }], # entry publication
         ['nw_entry_created_auto',   { Default => 0 }], # entry creation
+        ['nw_entry_author',         { Default => 0 }],
         ['nw_entry_list',           { Default => 0 }],
         ['nw_entry_emails',         { Default => '' }],
         ['nw_entry_message',        { Default => '' }],
@@ -67,6 +71,11 @@ sub init_registry {
     $plugin->registry({
         object_types  => { 'nwnotification' => 'NotifyWho::Notification' },
         callbacks => {
+
+            # If enabled, this callback handles the sending of notifications
+            # after an entry is published by Batch Edit or Manage Entries screen.
+            'cms_post_bulk_save.entries'
+                            => sub { runner('autosend_entry_notify_bulk', @_) },
 
             # If enabled, this callback handles the sending of notifications
             # after an entry is newly published.

@@ -20,6 +20,11 @@
         hint="<__trans phrase="Note: Enter email addresses on separate lines or separated by commas.">">
 
         <p>
+            <input type="checkbox" name="nw_entry_author" id="nw_entry_author" value="1" <mt:if name="nw_entry_author">checked="checked"</mt:if> />
+            <label for="nw_entry_author">Author<!-- (Add to “other e-mail addresses” list.) --></label>
+        </p>
+
+        <p>
             <input type="checkbox" name="nw_entry_list" id="nw_entry_list" value="1" <mt:if name="nw_entry_list">checked="checked"</mt:if> />
             <label for="nw_entry_list">Notification list subscribers, and/or</label>
         </p>
@@ -51,22 +56,26 @@
         <label for="nw_entry_text_excerpt"><__trans phrase="Excerpt"></label>
 
         <input type="radio" name="nw_entry_text" id="nw_entry_text_full" value="full" <mt:if name="nw_entry_text_full">checked="checked"</mt:if> />
-        <label for="nw_entry_text_full"><__trans phrase="Full"></label>       
+        <label for="nw_entry_text_full"><__trans phrase="Full"></label>
     </mtapp:setting>
 
     <mtapp:setting
         id="nw_entry_auto_setting"
         label="<__trans phrase="Automatic notification">"
-        hint="<__trans phrase="If checked, automatic delivery can be overridden on a per-entry basis.">"
+        hint="<__trans phrase="Notifications are only sent once per entry.">"
         show_hint="1">
 
         <div>
+            <input type="checkbox" name="nw_entry_force" id="nw_entry_force" value="1" <mt:if name="nw_entry_force">checked="checked"</mt:if> />
+            <label for="nw_entry_force"><__trans phrase="Disallow users from turning off notifications for an entry."></label>
+        </div>
+        <div>
             <input type="checkbox" name="nw_entry_created_auto" id="nw_entry_created_auto" value="1" <mt:if name="nw_entry_created_auto_1">checked="checked"</mt:if> />
-            <label for="nw_entry_created_auto"><__trans phrase="Send a notification automatically when a new entry is created."></label>
+            <label for="nw_entry_created_auto"><__trans phrase="Send a notification when a new entry is created."></label>
         </div>
         <div>
             <input type="checkbox" name="nw_entry_auto" id="nw_entry_auto" value="1" <mt:if name="nw_entry_auto_1">checked="checked"</mt:if> />
-            <label for="nw_entry_auto"><__trans phrase="Send a notification automatically when a new entry is published."></label>
+            <label for="nw_entry_auto"><__trans phrase="Send a notification when an entry is published or scheduled to be published."></label>
         </div>
     </mtapp:setting>
 
@@ -78,7 +87,7 @@
     <h3><__trans phrase="Feedback notifications"></h3>
 
     <p><__trans phrase="These settings control the comment/TrackBack notification recipients if notifications are enabled.  Separate multiple recipients with commas and/or spaces."></p>
-    
+
     <mtapp:setting
         id="fback_recipients"
         label="<__trans phrase="Notification recipients">"
@@ -192,7 +201,7 @@
         <p style="margin-left: 20px;"><MT_TRANS phrase="When enabled, the option below will use the settings above to automatically send out entry notifications.  Notifications can always be sent manually regardless of this setting."></p>
 
         <div class="label">
-            <label><MT_TRANS phrase="Automatic">:</label> 
+            <label><MT_TRANS phrase="Automatic">:</label>
         </div>
 
         <div class="field">

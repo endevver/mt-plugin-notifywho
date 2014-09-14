@@ -3,12 +3,16 @@
 The NotifyWho?! plugin enables you to control exactly who should receive
 entry, comment and TrackBack notifications for each blog.
 
-You can configure the plugin to send them to:
+You can configure the plugin to send any combination of:
 
-   * The Entry author (MT default)
-   * One or more arbitrary email addresses
-   * The blog's address book (i.e. notification list)
-   * Any of the above
+   * Entry creation and publication notifications:
+       * Author (useful when entries added on behalf of author, such as via [Ghostwriter](https://plugins.movabletype.org/ghostwriter/))
+       * Arbitrary email addresses
+       * The blog’s [address book](https://movabletype.org/documentation/appendices/config-directives/enableaddressbook.html) (i.e. notification list)
+   * Feedback notifications:
+       * Author (Movable Type default)
+       * Arbitrary email addresses
+       * The blog’s [address book](https://movabletype.org/documentation/appendices/config-directives/enableaddressbook.html)
 
 For entry notifications, you can configure the plugin to send them
 automatically or to simply provide defaults for the Share entry screen.
@@ -17,7 +21,7 @@ link directly about the entry save/preview buttons.
 
 # Requirements
 
-* Movable Type 4.x or 5.x
+* Movable Type 4+
 * A working email notification system
 * Ability to install plugins
 * Permission to configure a blog and its plugins
