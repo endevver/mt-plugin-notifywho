@@ -336,18 +336,27 @@ sub _automatic_notifications {
     my ($cb, $app, $param, $tmpl) = @{$_[0]};
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
-    # hide the toggle (thereby disabling notifications) on published or scheduled entries
+    # hide the toggle on published or scheduled entries
     return if $param->{status} == 2 || $param->{status} == 4;
 
     my $blogarg = 'blog:'.$app->blog->id;
 
-    # hide the toggle (thereby disabling notifications) on draft entries unless "on publish" enabled
-    my $auto = $plugin->get_config_value('nw_entry_auto', $blogarg) || 0;
-    return unless $auto || $param->{status} != 1;
+    my $auto = 0;
+    # if “on create” enabled, toggle “Enabled” on new entries
+    $auto = $plugin->get_config_value('nw_entry_created_auto', $blogarg) || 0 if ! $param->{status};
+    # if “on publish” enabled, toggle “Enabled” on all entries (new and draft, as otherwise we returned already)
+    $auto = 1 if $plugin->get_config_value('nw_entry_auto', $blogarg);
 
-    my $hiddeninput = '<input type="hidden" name="auto_notifications" id="auto_notifications" value="1" />';
+    my $disclaim = '';
+    # if “on create” disabled but “on publish” enabled, notifications not always sent on new entry
+    # make clear notifications will only be sent if set to published/scheduled
+    $disclaim = ' (upon publish or scheduling)'
+        if $auto and ! $plugin->get_config_value('nw_entry_created_auto', $blogarg);
+
+    my $hiddeninput = '<input type="hidden" name="auto_notifications" id="auto_notifications" value="' . $auto . '" />';
+    my $currentSetting = $auto ? 'Enabled' : 'Disabled';
     my $node = $tmpl->createTextNode(<<EOM);
-        <p>Automatic notifications for this entry are: <a href="javascript:void(0)" onclick="toggle_notifications(); return false;" id="auto_notifications_link">Enabled</a>$hiddeninput</p>
+        <p>Automatic notifications for this entry$disclaim are: <a href="javascript:void(0)" onclick="toggle_notifications(); return false;" id="auto_notifications_link">$currentSetting</a>$hiddeninput</p>
 EOM
 
     # if forced option set, hide the toggle by overwriting node
