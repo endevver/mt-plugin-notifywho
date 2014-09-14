@@ -20,6 +20,11 @@
         hint="<__trans phrase="Note: Enter email addresses on separate lines or separated by commas.">">
 
         <p>
+            <input type="checkbox" name="nw_entry_author" id="nw_entry_author" value="1" <mt:if name="nw_entry_author">checked="checked"</mt:if> />
+            <label for="nw_entry_author">Author<!-- (Add to “other e-mail addresses” list.) --></label>
+        </p>
+
+        <p>
             <input type="checkbox" name="nw_entry_list" id="nw_entry_list" value="1" <mt:if name="nw_entry_list">checked="checked"</mt:if> />
             <label for="nw_entry_list">Notification list subscribers, and/or</label>
         </p>
@@ -51,7 +56,7 @@
         <label for="nw_entry_text_excerpt"><__trans phrase="Excerpt"></label>
 
         <input type="radio" name="nw_entry_text" id="nw_entry_text_full" value="full" <mt:if name="nw_entry_text_full">checked="checked"</mt:if> />
-        <label for="nw_entry_text_full"><__trans phrase="Full"></label>       
+        <label for="nw_entry_text_full"><__trans phrase="Full"></label>
     </mtapp:setting>
 
     <mtapp:setting
@@ -82,7 +87,7 @@
     <h3><__trans phrase="Feedback notifications"></h3>
 
     <p><__trans phrase="These settings control the comment/TrackBack notification recipients if notifications are enabled.  Separate multiple recipients with commas and/or spaces."></p>
-    
+
     <mtapp:setting
         id="fback_recipients"
         label="<__trans phrase="Notification recipients">"
@@ -196,7 +201,7 @@
         <p style="margin-left: 20px;"><MT_TRANS phrase="When enabled, the option below will use the settings above to automatically send out entry notifications.  Notifications can always be sent manually regardless of this setting."></p>
 
         <div class="label">
-            <label><MT_TRANS phrase="Automatic">:</label> 
+            <label><MT_TRANS phrase="Automatic">:</label>
         </div>
 
         <div class="field">

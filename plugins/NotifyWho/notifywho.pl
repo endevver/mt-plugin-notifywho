@@ -40,6 +40,7 @@ MT->add_plugin($plugin = __PACKAGE__->new({
         ['nw_entry_force',          { Default => 0 }], # disallow user from disabling
         ['nw_entry_auto',           { Default => 0 }], # entry publication
         ['nw_entry_created_auto',   { Default => 0 }], # entry creation
+        ['nw_entry_author',         { Default => 0 }],
         ['nw_entry_list',           { Default => 0 }],
         ['nw_entry_emails',         { Default => '' }],
         ['nw_entry_message',        { Default => '' }],
