@@ -38,11 +38,15 @@ NotifyWho can be configured at the blog level by visiting Tools > Plugins > Noti
 
 Notifications can be sent when an entry is created, and when an entry is published. These are both options specifically for blogs that are set to *not* publish by default, where being notified that an entry has been created could be useful.
 
-# Public Submissions
+# Public submissions
 
 If you're making use of the Community.Pack's public submission form capability, it is likely useful to receive an email when the new entry is created or published. NotifyWho can work with the public submission form with a simple addition to the form:
 
     <input type="hidden" name="auto_notifications" value="1" />
+
+# Known issues
+
+NotifyWho uses Movable Type’s built in `send_notify` function, which always sends a notification to the entry author in addition to any other recipients. It is therefore not currently possible to exclude the author from the recipients list. If you want to *only* notify the author, though, the plugin must explicitly send a notifcation to the author, but this results in two e-mails being sent to the author since the `send_notify` always sends an e-mail to the author in addition to the given recipients. If you are sending notifications to anyone aside from the author, then you can uncheck the “Author” option in the plugin settings, since the author will be notified anyway. This will avoid duplicate e-mails being sent to the author.
 
 # Copyright
 
