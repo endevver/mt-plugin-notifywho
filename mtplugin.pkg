@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<plugin version="1.03">
+  <name>NotifyWho?!</name>
+  <version_url>http://jayallen.org/projects/notifywho/version.xml</version_url>
+  <sig>NotifyWho/notifywho.pl</sig>
+  <files>
+      <file>
+          <src>plugins/NotifyWho/notifywho.pl</src>
+          <destination>plugins/NotifyWho/notifywho.pl</destination>
+      </file>
+      <file>
+          <src>plugins/NotifyWho/lib</src>
+          <destination>plugins/NotifyWho/lib</destination>
+      </file>
+      <file>
+          <src>plugins/NotifyWho/tmpl</src>
+          <destination>plugins/NotifyWho/tmpl</destination>
+      </file>
+  </files>
+  <uninstall>
+      <rmdir>plugins/NotifyWho</rmdir>
+  </uninstall>
+</plugin>
