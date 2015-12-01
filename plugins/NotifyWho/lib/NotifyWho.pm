@@ -315,12 +315,16 @@ sub cb_mail_filter {
         ###l4p $logger->debug('DELETING FROM BCC: ', delete $params{headers}->{Bcc});
 
         if (@recipients) {
+            # The Config Directive EmailNotificationBcc is enabled by default.
             if (MT->instance->config('EmailNotificationBcc')) {
-                push @{ $params{headers}->{Bcc} }, @recipients;
-                push @{ $params{headers}->{To} }, $params{headers}->{From}
-                    unless exists $params{headers}->{To};
+                $params{headers}->{Bcc} = \@recipients;
+                # Normally we would set the "To" header to the author, just so
+                # that the email header would be complete. But, we don't want
+                # to always notify the author, and the author can be in
+                # @recipients/BCC, anyway.
+                $params{headers}->{To} = '';
             } else {
-                push @{ $params{headers}->{To} }, @recipients;
+                $params{headers}->{To} = \@recipients;
             }
         }
         ###l4p $logger->debug('NEW TO: ', l4mtdump($params{headers}->{To}));
