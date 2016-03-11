@@ -284,6 +284,7 @@ TMPL
 sub cb_mail_filter {
     my $plugin = shift;
     my ($cb, %params) = @_;
+    my @recipients;
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     ###l4p $logger->info('HANDLING ', $params{id});
@@ -297,7 +298,7 @@ sub cb_mail_filter {
         my $config = $plugin->get_config_hash('blog:' . $blog->id);
         ###l4p $logger->debug('$config: ', l4mtdump($config));
 
-        my @recipients
+        @recipients
             = $config->{nw_fback_author} ? $params{headers}->{To} : ();
 
         if (exists $config->{nw_fback_emails} and $config->{nw_fback_emails}){
@@ -309,28 +310,32 @@ sub cb_mail_filter {
             push(@recipients, map { $_->email }
                 $plugin->runner('_blog_subscribers'));
         }
-
-        ###l4p $logger->debug('Intended recips: ', (join ', ',@recipients));
-        ###l4p $logger->debug('DELETING FROM TO: ', delete $params{headers}->{To});
-        ###l4p $logger->debug('DELETING FROM BCC: ', delete $params{headers}->{Bcc});
-
-        if (@recipients) {
-            # The Config Directive EmailNotificationBcc is enabled by default.
-            if (MT->instance->config('EmailNotificationBcc')) {
-                $params{headers}->{Bcc} = \@recipients;
-                # Normally we would set the "To" header to the author, just so
-                # that the email header would be complete. But, we don't want
-                # to always notify the author, and the author can be in
-                # @recipients/BCC, anyway.
-                $params{headers}->{To} = '';
-            } else {
-                $params{headers}->{To} = \@recipients;
-            }
-        }
-        ###l4p $logger->debug('NEW TO: ', l4mtdump($params{headers}->{To}));
-        ###l4p $logger->debug('NEW BCC: ', l4mtdump($params{headers}->{Bcc}));
-        ###l4p $logger->debug('MAIL PARAMS: ', l4mtdump(\%params));
     }
+    elsif ($params{id} eq 'notify_entry' && $params{headers}->{Bcc} ) {
+        @recipients = $params{headers}->{Bcc};
+    }
+
+    ###l4p $logger->debug('Intended recips: ', (join ', ',@recipients));
+    ###l4p $logger->debug('DELETING FROM TO: ', delete $params{headers}->{To});
+    ###l4p $logger->debug('DELETING FROM BCC: ', delete $params{headers}->{Bcc});
+
+    if (@recipients) {
+        # The Config Directive EmailNotificationBcc is enabled by default.
+        if (MT->instance->config('EmailNotificationBcc')) {
+            $params{headers}->{Bcc} = \@recipients;
+            # Normally we would set the "To" header to the author, just so
+            # that the email header would be complete. But, we don't want
+            # to always notify the author, and the author can be in
+            # @recipients/BCC, anyway.
+            $params{headers}->{To} = '';
+        } else {
+            $params{headers}->{To} = \@recipients;
+        }
+    }
+
+    ###l4p $logger->debug('NEW TO: ', l4mtdump($params{headers}->{To}));
+    ###l4p $logger->debug('NEW BCC: ', l4mtdump($params{headers}->{Bcc}));
+    ###l4p $logger->debug('MAIL PARAMS: ', l4mtdump(\%params));
 
     return 1;
 }
