@@ -311,8 +311,18 @@ sub cb_mail_filter {
                 $plugin->runner('_blog_subscribers'));
         }
     }
-    elsif ($params{id} eq 'notify_entry' && $params{headers}->{Bcc} ) {
-        @recipients = $params{headers}->{Bcc};
+    # When running MT::App::CMS::AddressBook::send_notify, skip the first
+    # attempt to send a notification where only the "to" address is set and all
+    # other notifications have not been set. (Found in
+    # `unless ( exists $params{from_address} ) {`.) Notify Who handles all
+    # notification addresses, therefore this first check isn't needed, so skip
+    # it.
+    elsif (
+        $params{id} eq 'notify_entry'
+        && $params{headers}->{To}
+        && !$params{headers}->{Bcc}
+    ) {
+        return 0;
     }
 
     ###l4p $logger->debug('Intended recips: ', (join ', ',@recipients));
